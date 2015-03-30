@@ -85,42 +85,19 @@ module Enumerable
   end
 
   def my_inject(*args)
-    result = self.first
     case args.size
     when 0
-      element, index = self.first, 1
-      while element
-        result = yield result, element
-        element, index = self.drop(index).first, index + 1
-      end
-      result
+      my_inject_with_no_args &Proc.new #catches the block and pass it through
     when 1
       if args.first.is_a? Symbol
-        element, index = self.first, 1
-        while element
-          result = result.send(args.first, element) unless index == 1
-          element, index = self.drop(index).first, index + 1
-        end
-        result
+        my_inject_with_symbol args
       elsif args.first.is_a? Fixnum
-        element, index = self.first, 1
-        result = args.first
-        while element
-          result = yield result, element
-          element, index = self.drop(index).first, index + 1
-        end
-        result
+        my_inject_with_initial_value args, &Proc.new #catches the block and pass it through
       else
         raise ArgumentError.new
       end
     when 2
-      element, index = self.first, 1
-      result = args.first
-      while element
-        result = result.send(args.last, element) unless index == 1
-        element, index = self.drop(index).first, index + 1
-      end
-      result
+      my_inject_with_two_arguments args
     else
       raise ArgumentError.new
     end
@@ -129,6 +106,48 @@ module Enumerable
   def multiply_els
     raise ArgumentError.new unless self.my_all? { |elem| elem.is_a? Fixnum }
     self.my_inject(:*)
+  end
+
+  private
+
+  def my_inject_with_no_args
+    result = self.first
+    element, index = self.first, 1
+    while element
+      result = yield result, element
+      element, index = self.drop(index).first, index + 1
+    end
+    result
+  end
+
+  def my_inject_with_symbol args
+    result = self.first
+    element, index = self.first, 1
+    while element
+      result = result.send(args.first, element) unless index == 1
+      element, index = self.drop(index).first, index + 1
+    end
+    result      
+  end
+
+  def my_inject_with_initial_value args
+    element, index = self.first, 1
+    result = args.first
+    while element
+      result = yield result, element
+      element, index = self.drop(index).first, index + 1
+    end
+    result
+  end
+
+  def my_inject_with_two_arguments args
+    element, index = self.first, 1
+    result = args.first
+    while element
+      result = result.send(args.last, element) unless index == 1
+      element, index = self.drop(index).first, index + 1
+    end
+    result    
   end
 
 end
